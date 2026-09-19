@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Used Car Price Predictor</title>
+<style>
+  :root {
+    --bg: #f4f6f9;
+    --card: #ffffff;
+    --primary: #2E86AB;
+    --primary-dark: #1f5f7a;
+    --text: #1e2430;
+    --muted: #6b7280;
+    --border: #e2e5eb;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    padding: 32px 20px;
+    text-align: center;
+  }
+  header h1 { margin: 0 0 6px 0; font-size: 1.8rem; }
+  header p { margin: 0; opacity: 0.9; }
+  .container {
+    max-width: 900px;
+    margin: -20px auto 40px auto;
+    padding: 0 16px;
+  }
+  .card {
+    background: var(--card);
+    border-radius: 12px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+    padding: 28px;
+    margin-bottom: 20px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+  }
+  label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--muted);
+  }
+  input, select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background: #fff;
+    color: var(--text);
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--primary);
+  }
+  .actions {
+    margin-top: 24px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 12px 26px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  button:hover { background: var(--primary-dark); }
+  button:disabled { background: #a9b6c2; cursor: not-allowed; }
+  #apiUrl {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  #result {
+    margin-top: 10px;
+  }
+  .result-box {
+    background: #eef7f0;
+    border: 1px solid #b7e0c2;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+  }
+  .result-box .price {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #1a7a3f;
+  }
+  .result-box .label {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-top: 4px;
+  }
+  .error-box {
+    background: #fdecea;
+    border: 1px solid #f5c2c0;
+    color: #a4262c;
+    border-radius: 10px;
+    padding: 16px;
+  }
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.8rem;
+    padding-bottom: 30px;
+  }
+  .config-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .config-row input { max-width: 320px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🚗 Used Car Price Predictor</h1>
+  <p>Estimate resale value from a tuned XGBoost model</p>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <div class="config-row">
+      <label style="margin:0;">API endpoint:</label>
+      <input type="text" id="apiBase" value="http://127.0.0.1:8000" />
+    </div>
+
+    <form id="carForm">
+      <div class="grid">
+        <div>
+          <label for="brand">Brand</label>
+          <select id="brand">
+            <option>Toyota</option><option>Honda</option><option>Ford</option>
+            <option>Hyundai</option><option>Maruti Suzuki</option><option>BMW</option>
+            <option>Mercedes-Benz</option><option>Volkswagen</option><option>Tata</option>
+            <option>Kia</option>
+          </select>
+        </div>
+        <div>
+          <label for="model">Model (full name)</label>
+          <input type="text" id="model" value="Toyota Corolla" />
+        </div>
+        <div>
+          <label for="year">Year</label>
+          <input type="number" id="year" value="2019" min="1990" max="2026" />
+        </div>
+        <div>
+          <label for="km_driven">Kilometers Driven</label>
+          <input type="number" id="km_driven" value="45000" min="0" />
+        </div>
+        <div>
+          <label for="fuel_type">Fuel Type</label>
+          <select id="fuel_type">
+            <option>Petrol</option><option>Diesel</option><option>CNG</option>
+            <option>Electric</option><option>Hybrid</option>
+          </select>
+        </div>
+        <div>
+          <label for="transmission">Transmission</label>
+          <select id="transmission">
+            <option>Manual</option><option>Automatic</option>
+          </select>
+        </div>
+        <div>
+          <label for="owner_type">Owner Type</label>
+          <select id="owner_type">
+            <option>First Owner</option><option>Second Owner</option>
+            <option>Third Owner</option><option>Fourth & Above</option>
+          </select>
+        </div>
+        <div>
+          <label for="seller_type">Seller Type</label>
+          <select id="seller_type">
+            <option>Individual</option><option>Dealer</option>
+            <option>Trustmark Dealer</option>
+          </select>
+        </div>
+        <div>
+          <label for="mileage_kmpl">Mileage (kmpl)</label>
+          <input type="number" id="mileage_kmpl" value="18.5" step="0.1" min="0" />
+        </div>
+        <div>
+          <label for="engine_cc">Engine (cc)</label>
+          <input type="number" id="engine_cc" value="1500" min="0" />
+        </div>
+        <div>
+          <label for="max_power_bhp">Max Power (bhp)</label>
+          <input type="number" id="max_power_bhp" value="110" step="0.1" min="0" />
+        </div>
+        <div>
+          <label for="seats">Seats</label>
+          <input type="number" id="seats" value="5" min="2" max="9" />
+        </div>
+        <div>
+          <label for="location">Location</label>
+          <select id="location">
+            <option>Hyderabad</option><option>Mumbai</option><option>Delhi</option>
+            <option>Bangalore</option><option>Chennai</option><option>Pune</option>
+            <option>Kolkata</option><option>Ahmedabad</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="submit" id="predictBtn">Predict Price</button>
+        <span id="statusText" style="color: var(--muted); font-size: 0.9rem;"></span>
+      </div>
+    </form>
+
+    <div id="result"></div>
+  </div>
+
+  <footer>
+    Used Car Price Prediction System · Dataset → Cleaning → EDA → Feature Engineering →
+    5 Models → Comparison → Tuning → Best Model → Explainability → API → Web UI → Deployment
+  </footer>
+</div>
+
+<script>
+const form = document.getElementById("carForm");
+const resultDiv = document.getElementById("result");
+const statusText = document.getElementById("statusText");
+const predictBtn = document.getElementById("predictBtn");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  resultDiv.innerHTML = "";
+  statusText.textContent = "Predicting...";
+  predictBtn.disabled = true;
+
+  const apiBase = document.getElementById("apiBase").value.replace(/\/$/, "");
+
+  const payload = {
+    brand: document.getElementById("brand").value,
+    model: document.getElementById("model").value,
+    year: parseInt(document.getElementById("year").value, 10),
+    km_driven: parseFloat(document.getElementById("km_driven").value),
+    fuel_type: document.getElementById("fuel_type").value,
+    transmission: document.getElementById("transmission").value,
+    owner_type: document.getElementById("owner_type").value,
+    seller_type: document.getElementById("seller_type").value,
+    mileage_kmpl: parseFloat(document.getElementById("mileage_kmpl").value),
+    engine_cc: parseFloat(document.getElementById("engine_cc").value),
+    max_power_bhp: parseFloat(document.getElementById("max_power_bhp").value),
+    seats: parseInt(document.getElementById("seats").value, 10),
+    location: document.getElementById("location").value,
+  };
+
+  try {
+    const res = await fetch(`${apiBase}/predict`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      throw new Error(errBody.detail || `Request failed with status ${res.status}`);
+    }
+
+    const data = await res.json();
+    resultDiv.innerHTML = `
+      <div class="result-box">
+        <div class="price">$${data.predicted_price_usd.toLocaleString()}</div>
+        <div class="label">Estimated resale price · ${data.model_used}</div>
+      </div>`;
+    statusText.textContent = "";
+  } catch (err) {
+    resultDiv.innerHTML = `<div class="error-box">
+      <strong>Couldn't get a prediction.</strong><br/>
+      ${err.message}<br/><br/>
+      Make sure the API is running (see deployment/README) and the
+      endpoint above points to it. If you're opening this file directly
+      (file://), most browsers still allow the fetch as long as the API's
+      CORS is open (it is, by default).
+    </div>`;
+    statusText.textContent = "";
+  } finally {
+    predictBtn.disabled = false;
+  }
+});
+</script>
+
+</body>
+</html>

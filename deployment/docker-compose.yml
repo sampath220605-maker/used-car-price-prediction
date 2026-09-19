@@ -1,0 +1,24 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+    container_name: used-car-price-api
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  web:
+    image: python:3.11-slim
+    container_name: used-car-price-web
+    working_dir: /app
+    volumes:
+      - ../web:/app
+    command: ["python", "-m", "http.server", "8080"]
+    ports:
+      - "8080:8080"
+    depends_on:
+      - api
+    restart: unless-stopped

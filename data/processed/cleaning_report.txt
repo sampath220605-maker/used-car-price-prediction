@@ -1,0 +1,16 @@
+Raw shape: (8060, 14)
+Dropped 60 duplicate rows
+
+Missing values before imputation:
+fuel_type         70
+mileage_kmpl     400
+engine_cc        160
+max_power_bhp    240
+seats            160
+
+Missing values after imputation:
+0 total missing cells remain
+km_driven: capping 9 outliers to [-379149, 711951]
+price: capping 250 outliers to [-20358, 31810]
+
+Final cleaned shape: (8000, 15)

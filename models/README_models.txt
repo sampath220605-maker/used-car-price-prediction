@@ -1,0 +1,1 @@
+Removed random_forest.joblib (67MB) to keep the deliverable lightweight — its metrics are already captured in data/processed/model_comparison.csv. Re-run src/04_train_models.py to regenerate it if needed.
